@@ -1,14 +1,13 @@
 {
-  "private": true,
-  "name": "pixopat/piksel",
+  "name": "pixadelic/piksel-php-sdk",
   "type": "library",
-  "description": "A Piksel API client",
-  "keywords": ["piksel"],
-  "license": "UNLICENSED",
+  "description": "A php development toolkit for Piksel API v5.",
+  "keywords": ["piksel", "php"],
+  "license": "MIT",
   "authors": [
     {
       "name": "Alex Druhet",
-      "email": "alex@pixopat.com"
+      "email": "alex@pixadelic.fr"
     }
   ],
   "require": {
@@ -17,7 +16,7 @@
     "fabpot/goutte": "^3.1"
   },
   "autoload": {
-    "psr-0": {"": "src/"}
+    "psr-0": {"Piksel": "src/"}
   },
   "require-dev": {
     "phpunit/phpunit": "@stable",

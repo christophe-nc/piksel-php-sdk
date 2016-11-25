@@ -2,7 +2,7 @@
 /**
  * This file is part of the Piksel package.
  *
- * @copyright 2015 Pixopat, Alex Druhet
+ * @copyright 2015 Alex Druhet
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,7 +15,7 @@ namespace Piksel\Entity;
  *
  * Extends Base
  *
- * @author Alex Druhet <alex@pixopat.com>
+ * @author Alex Druhet <alex@pixadelic.com>
  * @package Piksel\Entity
  */
 class Video extends Base

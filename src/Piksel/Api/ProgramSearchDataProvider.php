@@ -2,7 +2,7 @@
 /**
  * This file is part of the Piksel package.
  *
- * @copyright 2015 Pixopat, Alex Druhet
+ * @copyright 2015 Alex Druhet
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -17,7 +17,7 @@ use Symfony\Component\Security\Acl\Exception\Exception;
  *
  * ProgramSearchDataProvider is a class that extend the {@link DataProviderBase} class.
  *
- * @author Alex Druhet <alex@pixopat.com>
+ * @author Alex Druhet <alex@pixadelic.com>
  * @package Piksel\Api
  */
 class ProgramSearchDataProvider extends DataProviderBase
