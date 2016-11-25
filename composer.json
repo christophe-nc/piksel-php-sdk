@@ -1,0 +1,26 @@
+{
+  "private": true,
+  "name": "pixopat/piksel",
+  "type": "library",
+  "description": "A Piksel API client",
+  "keywords": ["piksel"],
+  "license": "UNLICENSED",
+  "authors": [
+    {
+      "name": "Alex Druhet",
+      "email": "alex@pixopat.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "cocur/slugify": "~1.1",
+    "fabpot/goutte": "^3.1"
+  },
+  "autoload": {
+    "psr-0": {"": "src/"}
+  },
+  "require-dev": {
+    "phpunit/phpunit": "@stable",
+    "phpdocumentor/phpdocumentor": "~2.8"
+  }
+}
