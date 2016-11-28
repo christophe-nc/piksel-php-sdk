@@ -221,7 +221,7 @@ class Piksel
             $tags = $this->tagMenuDataProvider->getData();
             if ($tags) {
                 foreach ($tags as $tag) {
-                    $this->tagMenuCollection[$tag] = $tag;
+                    $this->tagMenuCollection[trim($tag)] = trim($tag);
                 }
             }
         }
