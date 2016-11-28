@@ -10,16 +10,17 @@
 
 namespace Piksel;
 
-use Piksel\Api\CategoriesDataProvider;
-use Piksel\Api\AssetDataProvider;
-use Piksel\Api\ProgramDataProvider;
-use Piksel\Api\ProgramSearchDataProvider;
-use Piksel\Api\UserTokenDataProvider;
-use Piksel\Api\ThumbnailDataProvider;
-use Piksel\Entity\Category;
-use Piksel\Entity\Video;
 use Goutte\Client;
 use GuzzleHttp\Client as GuzzleClient;
+use Piksel\Api\AssetDataProvider;
+use Piksel\Api\CategoriesDataProvider;
+use Piksel\Api\ProgramDataProvider;
+use Piksel\Api\ProgramSearchDataProvider;
+use Piksel\Api\TagMenuDataProvider;
+use Piksel\Api\ThumbnailDataProvider;
+use Piksel\Api\UserTokenDataProvider;
+use Piksel\Entity\Category;
+use Piksel\Entity\Video;
 
 /**
  * The Piksel class wrap all the logical process for accessing data from the Piksel API through clean objects
@@ -50,23 +51,23 @@ class Piksel
     /** @var AssetDataProvider A static storage of fetched assets data */
     private $assetDataProvider;
 
+    /** @var array A static collection of Video objects */
+    private $videoCollection;
+
+    /** @var TagMenuDataProvider A static storage of fetched categories data */
+    private $tagMenuDataProvider;
+
+    /** @var array A static collection of Tags keys containing objects */
+    private $tagMenuCollection;
+
     /** @var ProgramDataProvider A static storage of fetched program data */
     private $programDataProvider;
 
     /** @var ProgramSearchDataProvider A static storage of program searched data */
     private $programSearchDataProvider;
 
-    /** @var array A static collection of Video objects */
-    private $videoCollection;
-
-    /** @var array A static collection of Tags keys containing objects */
-    private $tagCollection;
-
     /** @var array A static collection of UUID programs keys containing objects */
     private $programCollection;
-
-//    /** @var string A temporary API user token */
-//    private $userToken;
 
     /**
      * The Piksel constructor must be called with a $config argument
@@ -207,6 +208,28 @@ class Piksel
     }
 
     /**
+     * Return an array of tags
+     *
+     * This method fills the $tagMenuCollection
+     * from $tagMenuDataProvider.
+     *
+     * @return array A collection of tags
+     */
+    public function getTagMenu()
+    {
+        if (!$this->tagMenuCollection) {
+            $tags = $this->tagMenuDataProvider->getData();
+            if ($tags) {
+                foreach ($tags as $tag) {
+                    $this->tagMenuCollection[$tag] = $tag;
+                }
+            }
+        }
+
+        return $this->tagMenuCollection;
+    }
+
+    /**
      * Return the total count of videos available in the Piksel account that we use
      *
      * This method fills the $totalCount
@@ -308,8 +331,9 @@ class Piksel
     public function sortVideoCollection(
         $sortBy = 'lastModified',
         $sortDir = 'desc'
-    ) {
-        $method = 'get'.ucfirst($sortBy);
+    )
+    {
+        $method = 'get' . ucfirst($sortBy);
         usort(
             $this->videoCollection,
             function ($a, $b) use ($method) {
@@ -501,7 +525,8 @@ class Piksel
         $limit = 20,
         $sortby = 'date_start',
         $sortdir = 'desc'
-    ) {
+    )
+    {
         $videos = null;
 
         if (is_array($this->categoryCollection)) {
@@ -677,7 +702,8 @@ class Piksel
         $limit = 20,
         $sortby = 'date_start',
         $sortdir = 'desc'
-    ) {
+    )
+    {
         $totalRequired = $start > 0 ? $start + $limit : $limit;
         if (
             !isset($this->tagCollection[$tag]) ||
@@ -752,7 +778,8 @@ class Piksel
         $limit = 20,
         $sortby = 'sortnum',
         $sortdir = 'desc'
-    ) {
+    )
+    {
         $totalRequired = $start > 0 ? $start * $limit : $limit;
         if (
             !isset($this->programCollection[$puuid]) ||
@@ -798,7 +825,8 @@ class Piksel
         $project_uuid,
         $start = 0,
         $limit = 20
-    ) {
+    )
+    {
         $data = $this->programSearchDataProvider->fetchData(
             $search_string,
             $project_uuid,
