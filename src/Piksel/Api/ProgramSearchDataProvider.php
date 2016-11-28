@@ -33,9 +33,11 @@ class ProgramSearchDataProvider extends DataProviderBase
      * @param $project_uuid  Project uuid found on the get code page
      * @param int $start Beginning of the data subset, 0 by default
      * @param int $limit Limit of the data subset, 20 by default
+     * @param string $sort_by default is by search weight, this can be overwritten with: programTitle, assetTitle, programCreation, assetCreation
+     * @param string $sort_dir possible values: asc, desc
      * @return array|null An array of programs
      */
-    public function fetchData($search_string = '*', $project_uuid = null, $start = 0, $limit = 20)
+    public function fetchData($search_string = '*', $project_uuid = null, $start = 0, $limit = 20, $sort_by = 'searchWeight', $sort_dir = 'desc')
     {
 
         if (!$project_uuid) {
@@ -44,11 +46,13 @@ class ProgramSearchDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'p=%s&field&s=%s&start=%d&end=%d',
+            'p=%s&field&s=%s&start=%d&end=%d&sortBy=%s&sortDir=%s',
             $project_uuid,
             urlencode(base64_encode($search_string)),
             $start,
-            ($start + $limit - 1)
+            ($start + $limit - 1),
+            $sort_by,
+            $sort_dir
         );
 
         // Return the response data

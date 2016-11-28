@@ -818,20 +818,26 @@ class Piksel
      * @param $project_uuid Project uuid found on the get code page
      * @param int $start Beginning of the data subset, 0 by default
      * @param int $limit Limit of the data subset, 20 by default
-     * @return array|null An array of programs
+     * @param string $sort_by default is by search weight, this can be overwritten with: programTitle, assetTitle, programCreation, assetCreation
+     * @param string $sort_dir possible values: asc, desc
+     * @return array An array of programs
      */
     public function getVideosByProgramSearch(
         $search_string,
         $project_uuid,
         $start = 0,
-        $limit = 20
+        $limit = 20,
+        $sort_by = 'searchWeight',
+        $sort_dir = 'desc'
     )
     {
         $data = $this->programSearchDataProvider->fetchData(
             $search_string,
             $project_uuid,
             $start,
-            $limit
+            $limit,
+            $sort_by,
+            $sort_dir
         );
         $videos = array();
         if (isset($data['totalCount']) && $data['totalCount'] > 0) {
