@@ -37,7 +37,7 @@ class ProgramSearchDataProvider extends DataProviderBase
      * @param string $sort_dir possible values: asc, desc
      * @return array|null An array of programs
      */
-    public function fetchData($search_string = '*', $project_uuid = null, $start = 0, $limit = 20, $sort_by = 'searchWeight', $sort_dir = 'desc')
+    public function fetchData($search_string = '*', $project_uuid = null, $start = 0, $limit = 20, $sort_by = '', $sort_dir = 'desc')
     {
 
         if (!$project_uuid) {

@@ -827,7 +827,7 @@ class Piksel
         $project_uuid,
         $start = 0,
         $limit = 20,
-        $sort_by = 'searchWeight',
+        $sort_by = '',
         $sort_dir = 'desc'
     )
     {
