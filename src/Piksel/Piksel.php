@@ -136,9 +136,11 @@ class Piksel
         $this->config = $config;
 
         if (!$this->categoriesDataProvider) {
-            $this->categoriesDataProvider = new CategoriesDataProvider(
-                $this->config
-            );
+            $this->categoriesDataProvider = new CategoriesDataProvider($this->config);
+        }
+
+        if (!$this->tagMenuDataProvider) {
+            $this->tagMenuDataProvider = new TagMenuDataProvider($this->config);
         }
 
         if (!$this->assetDataProvider) {
@@ -150,9 +152,7 @@ class Piksel
         }
 
         if (!$this->programSearchDataProvider) {
-            $this->programSearchDataProvider = new ProgramSearchDataProvider(
-                $this->config
-            );
+            $this->programSearchDataProvider = new ProgramSearchDataProvider($this->config);
         }
 
         if (!isset($this->config['debug'])) {
