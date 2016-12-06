@@ -10,10 +10,10 @@
 
 namespace Piksel\Provider\Silex;
 
+use Piksel\Piksel;
 use Pimple\Container;
 use Pimple\ServiceProviderInterface;
 use Silex\Application;
-use Piksel\Piksel;
 
 /**
  * PikselServiceProvider Class
@@ -33,6 +33,7 @@ class PikselServiceProvider implements ServiceProviderInterface
         $app['piksel'] = function () use ($app) {
             $config = (array)$app['config.piksel'];
             $config['debug'] = $app['debug'];
+
             return new Piksel($config);
         };
     }

@@ -43,6 +43,16 @@ class Category extends Base
     }
 
     /**
+     * getTotalCount
+     *
+     * @return int
+     */
+    public function getTotalCount()
+    {
+        return $this->setTotalCount();
+    }
+
+    /**
      * setTotalCount
      *
      * @param null $totalCount
@@ -56,16 +66,6 @@ class Category extends Base
         }
 
         return $this->totalCount;
-    }
-
-    /**
-     * getTotalCount
-     *
-     * @return int
-     */
-    public function getTotalCount()
-    {
-        return $this->setTotalCount();
     }
 
     /**

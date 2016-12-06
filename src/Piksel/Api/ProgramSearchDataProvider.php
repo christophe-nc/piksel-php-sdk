@@ -26,8 +26,7 @@ class ProgramSearchDataProvider extends DataProviderBase
      * Search programs from the Piksel account
      *
      * Searches one or more projects for programs matching the search string.
-     * The following fields are searched: asset metadata, program title,
-     * asset title, asset description, and program description.
+     * The following fields are searched: Site
      *
      * @param $search_string Search string to search on with length >= 3 characters, else nothing is returned
      * @param $project_uuid  Project uuid found on the get code page
@@ -46,13 +45,13 @@ class ProgramSearchDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'p=%s&field&s=%s&start=%d&end=%d&sortBy=%s&sortDir=%s',
-            $project_uuid,
-            urlencode(base64_encode($search_string)),
-            $start,
-            ($start + $limit - 1),
-            $sort_by,
-            $sort_dir
+          'p=%s&field&s=%s&start=%d&end=%d&sortBy=%s&sortDir=%s',
+          $project_uuid,
+          urlencode(base64_encode($search_string)),
+          $start,
+          ($start + $limit - 1),
+          $sort_by,
+          $sort_dir
         );
 
         // Return the response data

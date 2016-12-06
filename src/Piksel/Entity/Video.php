@@ -226,6 +226,18 @@ class Video extends Base
     }
 
     /**
+     * Return the video publication date
+     *
+     * This method is just an alias of getStartDate so far.
+     *
+     * @return string A string date with iso format
+     */
+    public function getPubDate()
+    {
+        return $this->getDateStart();
+    }
+
+    /**
      * Return the video start date
      *
      * date_start is used because of Kewego import.
@@ -243,39 +255,6 @@ class Video extends Base
         }
 
         return $date_start;
-    }
-
-    /**
-     * Return the video publication date
-     *
-     * This method is just an alias of getStartDate so far.
-     *
-     * @return string A string date with iso format
-     */
-    public function getPubDate()
-    {
-        return $this->getDateStart();
-    }
-
-
-    /**
-     * Return the video duration
-     *
-     * duration is available in the different assets for each encoding, I use the first one.
-     *
-     * @return float duration
-     */
-    public function getDuration()
-    {
-        $duration = false;
-        if (isset($this->assetOrProgram->assetFiles)) {
-            $duration = $this->assetOrProgram->assetFiles[0]['duration'];
-        }
-        if (isset($this->assetOrProgram->duration)) {
-            $duration = $this->assetOrProgram->duration;
-        }
-
-        return $duration;
     }
 
     /**
@@ -304,6 +283,39 @@ class Video extends Base
     }
 
     /**
+     * Return the video duration
+     *
+     * duration is available in the different assets for each encoding, I use the first one.
+     *
+     * @return float duration
+     */
+    public function getDuration()
+    {
+        $duration = false;
+        if (isset($this->assetOrProgram->assetFiles)) {
+            $duration = $this->assetOrProgram->assetFiles[0]['duration'];
+        }
+        if (isset($this->assetOrProgram->duration)) {
+            $duration = $this->assetOrProgram->duration;
+        }
+
+        return $duration;
+    }
+
+    /**
+     * Return captions data in json if exists
+     *
+     * @return bool|json
+     */
+    public function getCaptionsJson()
+    {
+        $captions = $this->getCaptions();
+
+        return $captions ? json_encode($captions) : null;
+
+    }
+
+    /**
      * * Return captions data if exists
      *
      * @return bool|array
@@ -319,20 +331,6 @@ class Video extends Base
         }
 
         return $captions;
-    }
-
-
-    /**
-     * Return captions data in json if exists
-     *
-     * @return bool|json
-     */
-    public function getCaptionsJson()
-    {
-        $captions = $this->getCaptions();
-
-        return $captions ? json_encode($captions) : null;
-
     }
 
     /**
@@ -369,27 +367,6 @@ class Video extends Base
     }
 
     /**
-     * Return the biggest video size
-     *
-     * Filesize is available in the different assets
-     * for each encoding, we use the biggest one.
-     *
-     * @return int filesize
-     */
-    public function getBiggestSize()
-    {
-        $filesize = false;
-        if (isset($this->assetOrProgram->assetFiles)) {
-            $filesize = $this->assetOrProgram->assetFiles[0]['filesize'];
-        }
-        if (isset($this->assetOrProgram->filesize)) {
-            $filesize = $this->assetOrProgram->filesize;
-        }
-
-        return $filesize;
-    }
-
-    /**
      * Return the biggest video size formatted
      *
      * This method return the video size in a
@@ -410,6 +387,26 @@ class Video extends Base
         return $output;
     }
 
+    /**
+     * Return the biggest video size
+     *
+     * Filesize is available in the different assets
+     * for each encoding, we use the biggest one.
+     *
+     * @return int filesize
+     */
+    public function getBiggestSize()
+    {
+        $filesize = false;
+        if (isset($this->assetOrProgram->assetFiles)) {
+            $filesize = $this->assetOrProgram->assetFiles[0]['filesize'];
+        }
+        if (isset($this->assetOrProgram->filesize)) {
+            $filesize = $this->assetOrProgram->filesize;
+        }
+
+        return $filesize;
+    }
 
     /**
      * Get if the video is published

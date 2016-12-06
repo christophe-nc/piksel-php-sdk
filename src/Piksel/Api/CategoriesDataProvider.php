@@ -37,7 +37,7 @@ class CategoriesDataProvider extends DataProviderBase
 
         if ($data && isset($data['custom'])) {
             foreach ($data['custom'] as $metadata) {
-                if ($metadata['metaname']==='Categories') {
+                if ($metadata['metaname'] === 'Categories') {
                     return explode(',', $metadata['fieldOptions']);
                 }
             }

@@ -55,6 +55,16 @@ class Base
     }
 
     /**
+     * Get the id property
+     *
+     * @return string The entity id
+     */
+    public function getId()
+    {
+        return $this->setId();
+    }
+
+    /**
      * Set the id property
      *
      * @param null $id A new entity id
@@ -66,17 +76,18 @@ class Base
             $this->id = $id;
             $this->setLastModified(new \DateTime('now'));
         }
+
         return $this->id;
     }
 
     /**
-     * Get the id property
+     * Get the title
      *
-     * @return string The entity id
+     * @return string The entity title
      */
-    public function getId()
+    public function getTitle()
     {
-        return $this->setId();
+        return $this->setTitle();
     }
 
     /**
@@ -90,17 +101,18 @@ class Base
         if (!$this->title || $title) {
             $this->title = $title;
         }
+
         return $this->title;
     }
 
     /**
-     * Get the title
+     * Get the slug
      *
-     * @return string The entity title
+     * @return string The entity slug
      */
-    public function getTitle()
+    public function getSlug()
     {
-        return $this->setTitle();
+        return $this->setSlug();
     }
 
     /**
@@ -118,17 +130,19 @@ class Base
             $slugify = new Slugify();
             $this->slug = $slugify->slugify($slug);
         }
+
         return $this->slug;
     }
 
     /**
-     * Get the slug
+     * Get the last modified time
      *
-     * @return string The entity slug
+     * @return \DateTime
      */
-    public function getSlug()
+    public function getLastModified()
     {
-        return $this->setSlug();
+        return $this->setLastModified();
+
     }
 
     /**
@@ -142,18 +156,8 @@ class Base
         if (!$this->lastModified || $dateTime) {
             $this->lastModified = $dateTime;
         }
+
         return $this->lastModified;
-
-    }
-
-    /**
-     * Get the last modified time
-     *
-     * @return \DateTime
-     */
-    public function getLastModified()
-    {
-        return $this->setLastModified();
 
     }
 }

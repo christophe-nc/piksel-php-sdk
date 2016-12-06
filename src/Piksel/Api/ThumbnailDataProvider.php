@@ -25,26 +25,6 @@ class ThumbnailDataProvider extends DataProviderBase
     private $assetid;
 
     /**
-     * {@inheritDoc}
-     */
-    public function fetchData()
-    {
-        if (!isset($this->assetid)) {
-            throw new \Exception('There is no assetID provided in ThumbnailDataProvider.');
-        }
-
-        // Build the query
-        $query = sprintf(
-            'assetId=%s',
-            $this->assetid
-        );
-
-        $this->assetid = NULL;
-
-        return $this->doRequest($query, $function = 'ws_thumbnail');
-    }
-
-    /**
      * Get thumbnail for an asset ID
      *
      * @param $assetid
@@ -59,9 +39,31 @@ class ThumbnailDataProvider extends DataProviderBase
             if ($data['failure']['code'] === 903) {
                 return null;
             }
+
             return false;
         }
+
         return $data['thumbnails'];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function fetchData()
+    {
+        if (!isset($this->assetid)) {
+            throw new \Exception('There is no assetID provided in ThumbnailDataProvider.');
+        }
+
+        // Build the query
+        $query = sprintf(
+          'assetId=%s',
+          $this->assetid
+        );
+
+        $this->assetid = null;
+
+        return $this->doRequest($query, $function = 'ws_thumbnail');
     }
 
     /**

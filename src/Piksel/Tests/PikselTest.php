@@ -31,22 +31,22 @@ class PikselTest extends \PHPUnit_Framework_TestCase
         $message = null;
 
         if (!array_key_exists('config', $GLOBALS)) {
-            $message = "\$config is not defined." . PHP_EOL .
-                "See README.md for details" . PHP_EOL;
+            $message = "\$config is not defined.".PHP_EOL.
+              "See README.md for details".PHP_EOL;
         }
         if (!array_key_exists('baseURL', $GLOBALS['config'])) {
-            $message .= "\$config['baseURL'] is not defined." . PHP_EOL .
-                "See README.md for details" . PHP_EOL;
+            $message .= "\$config['baseURL'] is not defined.".PHP_EOL.
+              "See README.md for details".PHP_EOL;
         }
         if (!array_key_exists('token', $GLOBALS['config'])) {
-            $message .= "\$config['token'] is not defined." . PHP_EOL .
-                "See README.md for details" . PHP_EOL;
+            $message .= "\$config['token'] is not defined.".PHP_EOL.
+              "See README.md for details".PHP_EOL;
         }
         if ($message) {
             die($message);
         }
 
-        echo 'Piksel configuration is ok.' . PHP_EOL;
+        echo 'Piksel configuration is ok.'.PHP_EOL;
     }
 
     /**
@@ -62,7 +62,7 @@ class PikselTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThan(0, $count);
 
         if (is_int($count)) {
-            echo sprintf('%s categories found', $count) . PHP_EOL;
+            echo sprintf('%s categories found', $count).PHP_EOL;
         }
 
     }
@@ -80,7 +80,7 @@ class PikselTest extends \PHPUnit_Framework_TestCase
         $this->assertGreaterThan(0, $count);
 
         if (is_int($count)) {
-            echo sprintf('%s assets found', $count) . PHP_EOL;
+            echo sprintf('%s assets found', $count).PHP_EOL;
         }
     }
 

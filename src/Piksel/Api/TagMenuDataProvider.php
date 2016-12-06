@@ -26,13 +26,18 @@ class TagMenuDataProvider extends DataProviderBase
      */
     public function fetchData()
     {
-        $accountMetadataDataProvider = new AccountMetadataDataProvider($this->config);
+        $accountMetadataDataProvider = new AccountMetadataDataProvider(
+          $this->config
+        );
         $data = $accountMetadataDataProvider->getData();
 
         if ($data && isset($data['custom'])) {
             foreach ($data['custom'] as $metadata) {
                 if ($metadata['metaname'] === 'tag_menu') {
-                    return explode(',', $metadata['fieldOptions']);
+                    return $metadata['fieldOptions'] ? explode(
+                      ',',
+                      $metadata['fieldOptions']
+                    ) : null;
                 }
             }
         }

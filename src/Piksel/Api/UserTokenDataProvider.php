@@ -28,9 +28,9 @@ class UserTokenDataProvider extends DataProviderBase
     {
         // Build the query
         $query = sprintf(
-            '/u/%s/p/%s',
-            $this->config['api']['username'],
-            urlencode(base64_encode($this->config['api']['password']))
+          '/u/%s/p/%s',
+          $this->config['api']['username'],
+          urlencode(base64_encode($this->config['api']['password']))
         );
 
         $count = 0;
@@ -53,10 +53,11 @@ class UserTokenDataProvider extends DataProviderBase
      */
     public function get()
     {
-        $data = $this->getData(TRUE);
+        $data = $this->getData(true);
         if (isset($data['failure']) || !isset($data['token'])) {
             return false;
         }
+
         return $data['token'];
     }
 

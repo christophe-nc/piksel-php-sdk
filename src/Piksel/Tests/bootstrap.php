@@ -16,7 +16,7 @@
  *
  */
 
-include_once(__DIR__ . '/../../../vendor/autoload.php');
-include_once(__DIR__ . '/../../../../../../config/piksel.php');
+include_once(__DIR__.'/../../../vendor/autoload.php');
+include_once(__DIR__.'/../../../../../../config/piksel.php');
 $config = $app['config.piksel'];
 $config['debug'] = true;

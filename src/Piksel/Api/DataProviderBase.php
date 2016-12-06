@@ -70,21 +70,6 @@ abstract class DataProviderBase
     }
 
     /**
-     * Camelizes a given string.
-     *
-     * @param string $string Some string
-     *
-     * @return string The camelized version of the string
-     */
-    public function camelize($string)
-    {
-        return strtr(
-            ucwords(strtr($string, array('_' => ' '))),
-            array(' ' => '')
-        );
-    }
-
-    /**
      * Makes a technical name human readable.
      *
      * Sequences of underscores are replaced by single spaces. The first letter
@@ -98,35 +83,21 @@ abstract class DataProviderBase
     public function humanize($text)
     {
         return ucfirst(
-            trim(
-                strtolower(
-                    preg_replace(
-                        array(
-                            '/([A-Z])/',
-                            '/[_\s]+/',
-                            '/[-\s]+/',
-                        ),
-                        array('_$1', ' ', ' '),
-                        $text
-                    )
-                )
+          trim(
+            strtolower(
+              preg_replace(
+                array(
+                  '/([A-Z])/',
+                  '/[_\s]+/',
+                  '/[-\s]+/',
+                ),
+                array('_$1', ' ', ' '),
+                $text
+              )
             )
+          )
         );
     }
-
-    /**
-     * Fetches the data
-     *
-     * @return array List of data items
-     */
-    abstract function fetchData();
-
-    /**
-     * Calculates the total number of data items.
-     *
-     * @return int The total number of data items.
-     */
-    abstract function calculateTotalCount();
 
     /**
      * Returns the ID that uniquely identifies the data provider.
@@ -146,168 +117,6 @@ abstract class DataProviderBase
     public function setId($value)
     {
         $this->id = $value;
-    }
-
-    /**
-     * Perform a request
-     *
-     * Wrapper for requesting the Piksel API
-     *
-     * @param string $query The well-formed query string
-     * @param string $function Optional, the Piksel API method, ws_asset by default
-     * @param int $count Optional, a count variable by reference
-     * @param boolean $cache Optional force no-cache request
-     * @param null $token Optional specify the token to use
-     * @return array|mixed|null A data or failure array
-     */
-    protected function doRequest(
-        $query,
-        $function = 'ws_asset',
-        &$count = 0,
-        $cache = true,
-        $token = null
-    ) {
-        $data = null;
-
-        if (!$token) {
-            $token = $this->config['token'];
-        }
-
-        if ($this->debug) {
-            $cache = false;
-        }
-
-        // Build the query
-        if (substr($query, 0, 1) === '/') {
-            $uri = sprintf(
-                '%s/ws/%s/api/%s/mode/json/apiv/5%s%s',
-                $this->config['baseURL'],
-                $function,
-                $token,
-                $query,
-                (!$cache ? '/?ck='.rand() : '')
-            );
-            // Store related response key
-            $responseKey = sprintf('%s', $this->camelize($function));
-        } else {
-            $uri = sprintf(
-                '%s/ws/%s/api/%s/mode/json/apiv/5?%s%s',
-                $this->config['baseURL'],
-                $function,
-                $token,
-                $query,
-                (!$cache ? '&ck='.rand() : '')
-            );
-            // Store related response key
-            $responseKey = sprintf('%sResponse', $this->camelize($function));
-        }
-
-        // Log requested url
-        if ($this->debug) {
-            error_log($uri);
-        }
-
-        $useGoutte = true;
-
-        if (!$useGoutte) {
-
-            if (!$cache) {
-                $opts = array(
-                    'http' => array(
-                        'method' => "GET",
-                        'header' => "Cache-Control: private, max-age=0, no-cache, no-store, must-revalidate\r\n"
-                            ."Pragma: no-cache\r\n"
-                            ."Expires: 0\r\n",
-                    ),
-                );
-            } else {
-                $opts = array(
-                    'http' => array(
-                        'method' => "GET",
-                        'header' => "Cache-Control: private, max-age=0, no-cache, no-store, must-revalidate\r\n"
-                            ."Pragma: no-cache\r\n"
-                            ."Expires: 0\r\n",
-                    ),
-                );
-            }
-
-            $opts['ssl'] = array(
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-            );
-
-            $context = stream_context_create($opts);
-
-            // Create the request
-            $data = json_decode(file_get_contents($uri, false, $context), true);
-
-        } else {
-
-            // Build request
-            $client = new Client();
-
-            // Uncomment to disable SSL verification (but don't do that please...)
-            // @see Guzzle 6 doc
-            $guzzleClient = new GuzzleClient(
-                array(
-                    'verify' => false,
-                )
-            );
-            $client->setClient($guzzleClient);
-
-            if (!$cache) {
-                // Set header to build a no caching request
-                $client->setHeader(
-                    'Cache-Control',
-                    'private, max-age=0, no-cache, no-store, must-revalidate'
-                );
-                $client->setHeader('Pragma', 'no-cache');
-                $client->setHeader('Expires', '0');
-            }
-
-            // Run POST request
-            $client->request('GET', $uri);
-
-            // Handle response
-            $response = $client->getResponse();
-            $data = json_decode($response->getContent(), true);
-
-        }
-
-        // Handle successful response
-        if (
-            isset($data['response'])
-            && isset($data['response']['success'])
-            && in_array(
-                $data['response']['success']['code'],
-                array(
-                    224, // User token found
-                    321, // Account Metadata found
-                    303, // Programs found
-                    205, // Asset Found
-                    304, // Assets Found
-                    325  // Thumbnail found
-                )
-            )
-            && isset($data['response'][$responseKey])
-        ) {
-            // Handle totalCount
-            if (isset($data['response'][$responseKey]['totalCount'])) {
-                $count = (int)$data['response'][$responseKey]['totalCount'];
-            }
-            // Proxifying data
-            $data = (array)$data['response'][$responseKey];
-        } // Handle failure
-        else {
-            if (
-                isset($data['response'])
-                && isset($data['response']['failure'])
-            ) {
-                $data = $data['response'];
-            }
-        }
-
-        return $data;
     }
 
     /**
@@ -335,6 +144,13 @@ abstract class DataProviderBase
     {
         $this->data = $value;
     }
+
+    /**
+     * Fetches the data
+     *
+     * @return array List of data items
+     */
+    abstract function fetchData();
 
     /**
      * Clear stored data.
@@ -373,5 +189,189 @@ abstract class DataProviderBase
     public function setTotalCount($value)
     {
         $this->totalCount = $value;
+    }
+
+    /**
+     * Calculates the total number of data items.
+     *
+     * @return int The total number of data items.
+     */
+    abstract function calculateTotalCount();
+
+    /**
+     * Perform a request
+     *
+     * Wrapper for requesting the Piksel API
+     *
+     * @param string $query The well-formed query string
+     * @param string $function Optional, the Piksel API method, ws_asset by default
+     * @param int $count Optional, a count variable by reference
+     * @param boolean $cache Optional force no-cache request
+     * @param null $token Optional specify the token to use
+     * @return array|mixed|null A data or failure array
+     */
+    protected function doRequest(
+      $query,
+      $function = 'ws_asset',
+      &$count = 0,
+      $cache = true,
+      $token = null
+    ) {
+        $data = null;
+
+        if (!$token) {
+            $token = $this->config['token'];
+        }
+
+        if ($this->debug) {
+            $cache = false;
+        }
+
+        // Build the query
+        if (substr($query, 0, 1) === '/') {
+            $uri = sprintf(
+              '%s/ws/%s/api/%s/mode/json/apiv/5%s%s',
+              $this->config['baseURL'],
+              $function,
+              $token,
+              $query,
+              (!$cache ? '/?ck='.rand() : '')
+            );
+            // Store related response key
+            $responseKey = sprintf('%s', $this->camelize($function));
+        } else {
+            $uri = sprintf(
+              '%s/ws/%s/api/%s/mode/json/apiv/5?%s%s',
+              $this->config['baseURL'],
+              $function,
+              $token,
+              $query,
+              (!$cache ? '&ck='.rand() : '')
+            );
+            // Store related response key
+            $responseKey = sprintf('%sResponse', $this->camelize($function));
+        }
+
+        // Log requested url
+        if ($this->debug) {
+            error_log($uri);
+        }
+
+        $useGoutte = true;
+
+        if (!$useGoutte) {
+
+            if (!$cache) {
+                $opts = array(
+                  'http' => array(
+                    'method' => "GET",
+                    'header' => "Cache-Control: private, max-age=0, no-cache, no-store, must-revalidate\r\n"
+                      ."Pragma: no-cache\r\n"
+                      ."Expires: 0\r\n",
+                  ),
+                );
+            } else {
+                $opts = array(
+                  'http' => array(
+                    'method' => "GET",
+                    'header' => "Cache-Control: private, max-age=0, no-cache, no-store, must-revalidate\r\n"
+                      ."Pragma: no-cache\r\n"
+                      ."Expires: 0\r\n",
+                  ),
+                );
+            }
+
+            $opts['ssl'] = array(
+              'verify_peer' => false,
+              'verify_peer_name' => false,
+            );
+
+            $context = stream_context_create($opts);
+
+            // Create the request
+            $data = json_decode(file_get_contents($uri, false, $context), true);
+
+        } else {
+
+            // Build request
+            $client = new Client();
+
+            // Uncomment to disable SSL verification (but don't do that please...)
+            // @see Guzzle 6 doc
+            $guzzleClient = new GuzzleClient(
+              array(
+                'verify' => false,
+              )
+            );
+            $client->setClient($guzzleClient);
+
+            if (!$cache) {
+                // Set header to build a no caching request
+                $client->setHeader(
+                  'Cache-Control',
+                  'private, max-age=0, no-cache, no-store, must-revalidate'
+                );
+                $client->setHeader('Pragma', 'no-cache');
+                $client->setHeader('Expires', '0');
+            }
+
+            // Run POST request
+            $client->request('GET', $uri);
+
+            // Handle response
+            $response = $client->getResponse();
+            $data = json_decode($response->getContent(), true);
+
+        }
+
+        // Handle successful response
+        if (
+          isset($data['response'])
+          && isset($data['response']['success'])
+          && in_array(
+            $data['response']['success']['code'],
+            array(
+              224, // User token found
+              321, // Account Metadata found
+              303, // Programs found
+              205, // Asset Found
+              304, // Assets Found
+              325  // Thumbnail found
+            )
+          )
+          && isset($data['response'][$responseKey])
+        ) {
+            // Handle totalCount
+            if (isset($data['response'][$responseKey]['totalCount'])) {
+                $count = (int)$data['response'][$responseKey]['totalCount'];
+            }
+            // Proxifying data
+            $data = (array)$data['response'][$responseKey];
+        } // Handle failure
+        else {
+            if (
+              isset($data['response'])
+              && isset($data['response']['failure'])
+            ) {
+                $data = $data['response'];
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Camelizes a given string.
+     *
+     * @param string $string Some string
+     *
+     * @return string The camelized version of the string
+     */
+    public function camelize($string)
+    {
+        return strtr(
+          ucwords(strtr($string, array('_' => ' '))),
+          array(' ' => '')
+        );
     }
 }

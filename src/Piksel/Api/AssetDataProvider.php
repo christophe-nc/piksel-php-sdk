@@ -38,11 +38,11 @@ class AssetDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&include_shared=true&assetfiles=true',
-            $start,
-            ($start + $limit - 1),
-            $sortby,
-            $sortdir
+          'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&include_shared=true&assetfiles=true',
+          $start,
+          ($start + $limit - 1),
+          $sortby,
+          $sortdir
         );
 
         // Return the response data
@@ -80,12 +80,12 @@ class AssetDataProvider extends DataProviderBase
         // Build the query
         $query = sprintf(
 //            'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&tags=%s&include_shared=true&assetfiles=true',
-            'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&tags=%s&include_shared=true&assetfiles=true',
-            $start,
-            ($start + $limit - 1),
-            $sortby,
-            $sortdir,
-            urlencode('%'.$tag.'%')
+          'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&tags=%s&include_shared=true&assetfiles=true',
+          $start,
+          ($start + $limit - 1),
+          $sortby,
+          $sortdir,
+          urlencode('%'.$tag.'%')
         );
 
         // Return the response data
@@ -119,23 +119,23 @@ class AssetDataProvider extends DataProviderBase
      * @return array|null An array of assets
      */
     public function fetchAssetsByMetadata(
-        $metadata,
-        $metavalue,
-        $start = 0,
-        $limit = 20,
-        $sortby = 'date_start',
-        $sortdir = 'desc'
+      $metadata,
+      $metavalue,
+      $start = 0,
+      $limit = 20,
+      $sortby = 'date_start',
+      $sortdir = 'desc'
     ) {
 
         // Build the query
         $query = sprintf(
-            'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&metadata=%s&metavalue=%s&include_shared=true&assetfiles=true',
-            $start,
-            ($start + $limit - 1),
-            $sortby,
-            $sortdir,
-            $metadata,
-            urlencode($metavalue)
+          'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&metadata=%s&metavalue=%s&include_shared=true&assetfiles=true',
+          $start,
+          ($start + $limit - 1),
+          $sortby,
+          $sortdir,
+          $metadata,
+          urlencode($metavalue)
         );
 
         $count = 0;
@@ -150,39 +150,39 @@ class AssetDataProvider extends DataProviderBase
             if ($sharedCount > 0) {
                 $data['asset'] = array_merge($data['asset'], $sharedData['asset']);
                 usort(
-                    $data['asset'],
-                    function ($a, $b) use ($sortby, $sortdir) {
-                        if (isset($a[$sortby]) && isset($b[$sortby])) {
+                  $data['asset'],
+                  function ($a, $b) use ($sortby, $sortdir) {
+                      if (isset($a[$sortby]) && isset($b[$sortby])) {
 
-                            $valueA = $a[$sortby];
-                            $valueB = $b[$sortby];
+                          $valueA = $a[$sortby];
+                          $valueB = $b[$sortby];
 
-                            if ($valueA === $valueB) {
+                          if ($valueA === $valueB) {
 
-                                return 0;
-                            } else {
-                                if ($valueA > $valueB) {
-                                    if ($sortdir === 'desc') {
-                                        return -1;
-                                    }
-                                    if ($sortdir === 'asc') {
-                                        return 1;
-                                    }
+                              return 0;
+                          } else {
+                              if ($valueA > $valueB) {
+                                  if ($sortdir === 'desc') {
+                                      return -1;
+                                  }
+                                  if ($sortdir === 'asc') {
+                                      return 1;
+                                  }
 
-                                    return -1;
-                                } else {
-                                    if ($sortdir === 'desc') {
-                                        return 1;
-                                    }
-                                    if ($sortdir === 'asc') {
-                                        return -1;
-                                    }
+                                  return -1;
+                              } else {
+                                  if ($sortdir === 'desc') {
+                                      return 1;
+                                  }
+                                  if ($sortdir === 'asc') {
+                                      return -1;
+                                  }
 
-                                    return 1;
-                                }
-                            }
-                        }
-                    }
+                                  return 1;
+                              }
+                          }
+                      }
+                  }
                 );
 
                 // We cut the collection to the limit to honor pagination process
@@ -226,15 +226,15 @@ class AssetDataProvider extends DataProviderBase
         // Build the query
         if ($publishedOnly) {
             $query = sprintf(
-                '%s=%s&isPublished=true&include_shared=true&assetfiles=true',
-                $identifier,
-                $vid
+              '%s=%s&isPublished=true&include_shared=true&assetfiles=true',
+              $identifier,
+              $vid
             );
         } else {
             $query = sprintf(
-                '%s=%s&include_shared=true&assetfiles=true',
-                $identifier,
-                $vid
+              '%s=%s&include_shared=true&assetfiles=true',
+              $identifier,
+              $vid
             );
         }
 
@@ -261,8 +261,8 @@ class AssetDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'title=%s&isPublished=true&include_shared=true&assetfiles=true',
-            $title
+          'title=%s&isPublished=true&include_shared=true&assetfiles=true',
+          $title
         );
 
         $data = $this->doRequest($query, 'ws_asset');
@@ -284,10 +284,10 @@ class AssetDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'assetId=%s&start=%d&end=%d',
-            $assetId,
-            $start,
-            ($start + $limit - 1)
+          'assetId=%s&start=%d&end=%d',
+          $assetId,
+          $start,
+          ($start + $limit - 1)
         );
 
         $data = $this->doRequest($query, 'ws_asset_associations');
@@ -311,16 +311,16 @@ class AssetDataProvider extends DataProviderBase
 
         if (isset($data['asset'])) {
             $data['asset'] = array_filter(
-                $data['asset'],
-                function ($item) use ($property, $value) {
-                    if (isset($item[$property])) {
-                        if ($item[$property] == $value) {
-                            return false;
-                        }
-                    }
+              $data['asset'],
+              function ($item) use ($property, $value) {
+                  if (isset($item[$property])) {
+                      if ($item[$property] == $value) {
+                          return false;
+                      }
+                  }
 
-                    return true;
-                }
+                  return true;
+              }
             );
 
             if (isset($data['currentCount'])) {
@@ -338,8 +338,8 @@ class AssetDataProvider extends DataProviderBase
     {
         $count = null;
         $data = $this->doRequest(
-            sprintf('start=0&end=1&isPublished=true'),
-            'ws_asset'
+          sprintf('start=0&end=1&isPublished=true'),
+          'ws_asset'
         );
 
 //        $data = $this->fetchProgramsByUUID($this->config['searchUUID'], 0, 1);

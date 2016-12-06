@@ -93,43 +93,43 @@ class Piksel
 
         if (!isset($config['baseURL'])) {
             throw new \Exception(
-                'There is no API base URL provided in your Piksel config.'
+              'There is no API base URL provided in your Piksel config.'
             );
         }
 
         if (!isset($config['token'])) {
             throw new \Exception(
-                'There is no account token provided in your Piksel config.'
+              'There is no account token provided in your Piksel config.'
             );
         }
 
         if (!isset($config['clientToken'])) {
             throw new \Exception(
-                'There is no client token provided in your Piksel config.'
+              'There is no client token provided in your Piksel config.'
             );
         }
 
         if (!isset($config['searchUUID'])) {
             throw new \Exception(
-                'There is no default project UUID provided in your Piksel config.'
+              'There is no default project UUID provided in your Piksel config.'
             );
         }
 
         if (!isset($config['api'])) {
             throw new \Exception(
-                'There is no API configuration provided in your Piksel config.'
+              'There is no API configuration provided in your Piksel config.'
             );
         }
 
         if (!isset($config['api']['username'])) {
             throw new \Exception(
-                'There is no api username provided in your Piksel config.'
+              'There is no api username provided in your Piksel config.'
             );
         }
 
         if (!isset($config['api']['password'])) {
             throw new \Exception(
-                'There is no api password provided in your Piksel config.'
+              'There is no api password provided in your Piksel config.'
             );
         }
 
@@ -185,29 +185,6 @@ class Piksel
     }
 
     /**
-     * Return an array of Category objects
-     *
-     * This method fills the $categoryCollection
-     * from $categoriesDataProvider.
-     *
-     * @return array A collection of Category objects
-     */
-    public function getCategories()
-    {
-        if (!$this->categoryCollection) {
-            $categories = $this->categoriesDataProvider->getData();
-            if ($categories) {
-                foreach ($categories as $categoryTitle) {
-                    $category = new Category($categoryTitle);
-                    $this->categoryCollection[$category->getSlug()] = $category;
-                }
-            }
-        }
-
-        return $this->categoryCollection;
-    }
-
-    /**
      * Return an array of tags
      *
      * This method fills the $tagMenuCollection
@@ -260,16 +237,16 @@ class Piksel
     {
         if (!$this->videoCollection) {
             $data = $this->programDataProvider->fetchByProjectUUID(
-                $this->config['searchUUID'],
-                0,
-                20,
-                'dateStart',
-                'desc'
+              $this->config['searchUUID'],
+              0,
+              20,
+              'dateStart',
+              'desc'
             );
             $data = $this->programDataProvider->filterAssetsByProperty(
-                $data,
-                'isHidden',
-                1
+              $data,
+              'isHidden',
+              1
             );
 //            $data = $this->programDataProvider->filterAssetsByProperty(
 //                $data,
@@ -329,36 +306,35 @@ class Piksel
      * @param string $sortDir
      */
     public function sortVideoCollection(
-        $sortBy = 'lastModified',
-        $sortDir = 'desc'
-    )
-    {
-        $method = 'get' . ucfirst($sortBy);
+      $sortBy = 'lastModified',
+      $sortDir = 'desc'
+    ) {
+        $method = 'get'.ucfirst($sortBy);
         usort(
-            $this->videoCollection,
-            function ($a, $b) use ($method) {
+          $this->videoCollection,
+          function ($a, $b) use ($method) {
 
-                $ca = '';
-                $cb = '';
+              $ca = '';
+              $cb = '';
 
-                if ($method === 'getLastModified') {
-                    $ca = $a->$method()->getTimestamp();
-                    $cb = $b->$method()->getTimestamp();
-                } elseif (method_exists($a, $method)) {
-                    $ca = $a->$method();
-                    $cb = $b->$method();
-                }
+              if ($method === 'getLastModified') {
+                  $ca = $a->$method()->getTimestamp();
+                  $cb = $b->$method()->getTimestamp();
+              } elseif (method_exists($a, $method)) {
+                  $ca = $a->$method();
+                  $cb = $b->$method();
+              }
 
-                return strnatcmp(
-                    $ca,
-                    $cb
-                );
-            }
+              return strnatcmp(
+                $ca,
+                $cb
+              );
+          }
         );
 
         if ($sortDir === 'desc') {
             $this->videoCollection = array_reverse(
-                $this->videoCollection
+              $this->videoCollection
             );
         }
     }
@@ -378,9 +354,9 @@ class Piksel
     public function getVideoBySlug($slug)
     {
         if ($this->videoCollection && array_key_exists(
-                $slug,
-                $this->videoCollection
-            )
+            $slug,
+            $this->videoCollection
+          )
         ) {
             return $this->videoCollection[$slug];
         }
@@ -399,40 +375,94 @@ class Piksel
     }
 
     /**
-     * Return a Video object from a vid
+     * Retrieve a Category object with its videos.
      *
-     * The vid could be either a Kewego sig
-     * a Piksel assetid or a Piksel program UUID
+     * This method have the ability to fetch the category assets
+     * from the $assetDataProvider and to store them as a Video objects collection
+     * in the videos property of the requested Category object.
      *
-     * @param $vid A Kewego sig, a Piksel assetid or a Piksel program UUID
-     * @return Video A Video object
-     * @throws \Exception If the video is not found
+     * @param string $slug The requested Category slug
+     * @param int $start Beginning of the Video collection subset for pagination, 0 by default
+     * @param int $limit Limit of the Video collection subset for pagination, 20 by default
+     * @param string $sortby Possible values sortnum, dateStart, dateEnd, viewcount. sortnum by default
+     * @param string $sortdir Optional, possible values: desc, asc ; default: desc
+     * @return Category A Category object with its associated videos
      */
-    public function getVideoByVid($vid)
+    public function getCategoryBySlug(
+      $slug,
+      $start = 0,
+      $limit = 20,
+      $sortby = 'date_start',
+      $sortdir = 'desc'
+    ) {
+        $videos = null;
+
+        if (is_array($this->categoryCollection)) {
+            if (array_key_exists($slug, $this->categoryCollection)) {
+                $videos = $this->categoryCollection[$slug]->getVideos();
+            }
+        } else {
+            $this->getCategories();
+        }
+        if (!$videos && $this->categoryCollection[$slug]->getTotalCount() > 0) {
+            $title = $this->assetDataProvider->humanize($slug);
+            $assets = $this->assetDataProvider->fetchAssetsByMetadata(
+              'Categories',
+              $title,
+              $start,
+              $limit,
+              $sortby,
+              $sortdir
+            );
+            if (array_key_exists('failure', $assets)) {
+                return false;
+            }
+            $assets = $this->assetDataProvider->filterAssetsByProperty(
+              $assets,
+              'isHidden',
+              1
+            );
+            $count = $assets['totalCount'];
+            unset($assets['totalCount']);
+            $videos = array();
+            if ($count > 0) {
+                foreach ($assets['asset'] as $asset) {
+                    $video = new Video($asset);
+                    $videos[$video->getSlug()] = $video;
+                }
+            }
+            if (!array_key_exists($slug, $this->categoryCollection)) {
+                $this->categoryCollection[$slug] = new Category($title, $slug);
+            }
+            $this->categoryCollection[$slug]->setTotalCount($count);
+            $this->categoryCollection[$slug]->setVideos($videos);
+        }
+
+        // Return the data
+        return $this->categoryCollection[$slug];
+    }
+
+    /**
+     * Return an array of Category objects
+     *
+     * This method fills the $categoryCollection
+     * from $categoriesDataProvider.
+     *
+     * @return array A collection of Category objects
+     */
+    public function getCategories()
     {
-        if (is_array($this->videoCollection)) {
-            foreach ($this->videoCollection as $video) {
-                if ($video->getId() === $vid) {
-                    return $video;
+        if (!$this->categoryCollection) {
+            $categories = $this->categoriesDataProvider->getData();
+            if ($categories) {
+                foreach ($categories as $categoryTitle) {
+                    $category = new Category($categoryTitle);
+                    $this->categoryCollection[$category->getSlug()] = $category;
                 }
             }
         }
 
-        $data = $this->assetDataProvider->fetchAssetByVid($vid);
-
-        if (array_key_exists('failure', $data)) {
-            $data = $this->programDataProvider->fetchByProgramUUID($vid);
-        }
-
-        if (!array_key_exists('assetid', $data)) {
-            return false;
-        }
-
-        $video = new Video($data);
-
-        $this->videoCollection[$video->getSlug()] = $video;
-
-        return $video;
+        return $this->categoryCollection;
     }
 
 //    /**
@@ -506,72 +536,46 @@ class Piksel
 //    }
 
     /**
-     * Retrieve a Category object with its videos.
+     * Returns the videos total count of a Category object from its slug
      *
-     * This method have the ability to fetch the category assets
-     * from the $assetDataProvider and to store them as a Video objects collection
-     * in the videos property of the requested Category object.
+     * This method is convenient for a pagination purpose
+     * in a controller or a view
      *
-     * @param string $slug The requested Category slug
-     * @param int $start Beginning of the Video collection subset for pagination, 0 by default
-     * @param int $limit Limit of the Video collection subset for pagination, 20 by default
-     * @param string $sortby Possible values sortnum, dateStart, dateEnd, viewcount. sortnum by default
-     * @param string $sortdir Optional, possible values: desc, asc ; default: desc
-     * @return Category A Category object with its associated videos
+     * @param string $slug A Category slug
+     * @return int Return the videos total count
      */
-    public function getCategoryBySlug(
-        $slug,
-        $start = 0,
-        $limit = 20,
-        $sortby = 'date_start',
-        $sortdir = 'desc'
-    )
+    public function getCategoryTotalCountBySlug($slug)
     {
-        $videos = null;
-
+        $count = 0;
         if (is_array($this->categoryCollection)) {
-            if (array_key_exists($slug, $this->categoryCollection)) {
-                $videos = $this->categoryCollection[$slug]->getVideos();
+            if (isset($this->categoryCollection[$slug])) {
+                $count = $this->categoryCollection[$slug]->getTotalCount();
             }
         } else {
             $this->getCategories();
         }
-        if (!$videos && $this->categoryCollection[$slug]->getTotalCount() > 0) {
+        if (!$count) {
             $title = $this->assetDataProvider->humanize($slug);
             $assets = $this->assetDataProvider->fetchAssetsByMetadata(
-                'Categories',
-                $title,
-                $start,
-                $limit,
-                $sortby,
-                $sortdir
+              'Categories',
+              $title,
+              0,
+              1
             );
             if (array_key_exists('failure', $assets)) {
                 return false;
             }
-            $assets = $this->assetDataProvider->filterAssetsByProperty(
-                $assets,
-                'isHidden',
-                1
-            );
             $count = $assets['totalCount'];
-            unset($assets['totalCount']);
-            $videos = array();
-            if ($count > 0) {
-                foreach ($assets['asset'] as $asset) {
-                    $video = new Video($asset);
-                    $videos[$video->getSlug()] = $video;
-                }
-            }
-            if (!array_key_exists($slug, $this->categoryCollection)) {
+
+            if (!isset($this->categoryCollection[$slug])) {
                 $this->categoryCollection[$slug] = new Category($title, $slug);
             }
+
             $this->categoryCollection[$slug]->setTotalCount($count);
-            $this->categoryCollection[$slug]->setVideos($videos);
+
         }
 
-        // Return the data
-        return $this->categoryCollection[$slug];
+        return $count;
     }
 
 //    /**
@@ -616,49 +620,6 @@ class Piksel
 //    }
 
     /**
-     * Returns the videos total count of a Category object from its slug
-     *
-     * This method is convenient for a pagination purpose
-     * in a controller or a view
-     *
-     * @param string $slug A Category slug
-     * @return int Return the videos total count
-     */
-    public function getCategoryTotalCountBySlug($slug)
-    {
-        $count = 0;
-        if (is_array($this->categoryCollection)) {
-            if (isset($this->categoryCollection[$slug])) {
-                $count = $this->categoryCollection[$slug]->getTotalCount();
-            }
-        } else {
-            $this->getCategories();
-        }
-        if (!$count) {
-            $title = $this->assetDataProvider->humanize($slug);
-            $assets = $this->assetDataProvider->fetchAssetsByMetadata(
-                'Categories',
-                $title,
-                0,
-                1
-            );
-            if (array_key_exists('failure', $assets)) {
-                return false;
-            }
-            $count = $assets['totalCount'];
-
-            if (!isset($this->categoryCollection[$slug])) {
-                $this->categoryCollection[$slug] = new Category($title, $slug);
-            }
-
-            $this->categoryCollection[$slug]->setTotalCount($count);
-
-        }
-
-        return $count;
-    }
-
-    /**
      * Get and set associated data of a Video
      *
      * @param string $slug A Video slug
@@ -673,7 +634,7 @@ class Piksel
         }
         if (!$this->videoCollection[$slug]->getAssociatedData()) {
             $data = $this->assetDataProvider->fetchAssociationsByAssetid(
-                $this->videoCollection[$slug]->getId()
+              $this->videoCollection[$slug]->getId()
             );
             if (array_key_exists('failure', $data)) {
                 return false;
@@ -682,6 +643,43 @@ class Piksel
         }
 
         return $this->videoCollection[$slug]->getAssociatedData();
+    }
+
+    /**
+     * Return a Video object from a vid
+     *
+     * The vid could be either a Kewego sig
+     * a Piksel assetid or a Piksel program UUID
+     *
+     * @param $vid A Kewego sig, a Piksel assetid or a Piksel program UUID
+     * @return Video A Video object
+     * @throws \Exception If the video is not found
+     */
+    public function getVideoByVid($vid)
+    {
+        if (is_array($this->videoCollection)) {
+            foreach ($this->videoCollection as $video) {
+                if ($video->getId() === $vid) {
+                    return $video;
+                }
+            }
+        }
+
+        $data = $this->assetDataProvider->fetchAssetByVid($vid);
+
+        if (array_key_exists('failure', $data)) {
+            $data = $this->programDataProvider->fetchByProgramUUID($vid);
+        }
+
+        if (!array_key_exists('assetid', $data)) {
+            return false;
+        }
+
+        $video = new Video($data);
+
+        $this->videoCollection[$video->getSlug()] = $video;
+
+        return $video;
     }
 
     /**
@@ -697,35 +695,34 @@ class Piksel
      * @return mixed
      */
     public function getVideosByTag(
-        $tag,
-        $start = 0,
-        $limit = 20,
-        $sortby = 'date_start',
-        $sortdir = 'desc'
-    )
-    {
+      $tag,
+      $start = 0,
+      $limit = 20,
+      $sortby = 'date_start',
+      $sortdir = 'desc'
+    ) {
         $totalRequired = $start > 0 ? $start + $limit : $limit;
         if (
-            !isset($this->tagCollection[$tag]) ||
-            !isset($this->tagCollection[$tag]['videos']) ||
-            (isset($this->tagCollection[$tag]['videos']) && count(
-                    $this->tagCollection[$tag]['videos']
-                ) <= $totalRequired)
+          !isset($this->tagCollection[$tag]) ||
+          !isset($this->tagCollection[$tag]['videos']) ||
+          (isset($this->tagCollection[$tag]['videos']) && count(
+              $this->tagCollection[$tag]['videos']
+            ) <= $totalRequired)
         ) {
             $data = $this->assetDataProvider->fetchAssetsByTag(
-                $tag,
-                $start,
-                $limit,
-                $sortby,
-                $sortdir
+              $tag,
+              $start,
+              $limit,
+              $sortby,
+              $sortdir
             );
             if (!array_key_exists('asset', $data)) {
                 return false;
             }
             $data = $this->assetDataProvider->filterAssetsByProperty(
-                $data,
-                'isHidden',
-                1
+              $data,
+              'isHidden',
+              1
             );
             $assets = $data['asset'];
             $count = $data['totalCount'];
@@ -773,27 +770,26 @@ class Piksel
      * @return mixed
      */
     public function getVideosByProjectUUID(
-        $puuid,
-        $start = 0,
-        $limit = 20,
-        $sortby = 'sortnum',
-        $sortdir = 'desc'
-    )
-    {
+      $puuid,
+      $start = 0,
+      $limit = 20,
+      $sortby = 'sortnum',
+      $sortdir = 'desc'
+    ) {
         $totalRequired = $start > 0 ? $start * $limit : $limit;
         if (
-            !isset($this->programCollection[$puuid]) ||
-            !isset($this->programCollection[$puuid]['videos']) ||
-            (isset($this->programCollection[$puuid]['videos']) && count(
-                    $this->programCollection[$puuid]['videos']
-                ) <= $totalRequired)
+          !isset($this->programCollection[$puuid]) ||
+          !isset($this->programCollection[$puuid]['videos']) ||
+          (isset($this->programCollection[$puuid]['videos']) && count(
+              $this->programCollection[$puuid]['videos']
+            ) <= $totalRequired)
         ) {
             $programs = $this->programDataProvider->fetchByProjectUUID(
-                $puuid,
-                $start,
-                $limit,
-                $sortby,
-                $sortdir
+              $puuid,
+              $start,
+              $limit,
+              $sortby,
+              $sortdir
             );
             $count = $programs['totalCount'];
             unset($programs['totalCount']);
@@ -823,21 +819,20 @@ class Piksel
      * @return array An array of programs
      */
     public function getVideosByProgramSearch(
-        $search_string,
-        $project_uuid,
-        $start = 0,
-        $limit = 20,
-        $sort_by = '',
-        $sort_dir = 'desc'
-    )
-    {
+      $search_string,
+      $project_uuid,
+      $start = 0,
+      $limit = 20,
+      $sort_by = '',
+      $sort_dir = 'desc'
+    ) {
         $data = $this->programSearchDataProvider->fetchData(
-            $search_string,
-            $project_uuid,
-            $start,
-            $limit,
-            $sort_by,
-            $sort_dir
+          $search_string,
+          $project_uuid,
+          $start,
+          $limit,
+          $sort_by,
+          $sort_dir
         );
         $videos = array();
         if (isset($data['totalCount']) && $data['totalCount'] > 0) {
@@ -860,37 +855,13 @@ class Piksel
     public function getTotalCountByProgramSearch($search_string, $project_uuid)
     {
         $data = $this->programSearchDataProvider->fetchData(
-            $search_string,
-            $project_uuid,
-            0,
-            1
+          $search_string,
+          $project_uuid,
+          0,
+          1
         );
 
         return isset($data['totalCount']) ? $data['totalCount'] : 0;
-    }
-
-
-    /**
-     * Get a temporary API user token
-     *
-     * The token is preserved and active for one session
-     *
-     * @param $config
-     * @return string
-     */
-    public function getApiTmpUserToken($config)
-    {
-        if (session_id()) {
-            @session_unset();
-            @session_destroy();
-            unset($_SESSION);
-            $_SESSION = array();
-
-        }
-        $userTokenDataProvider = new UserTokenDataProvider($config);
-        $userTokenDataProvider->clear();
-
-        return $userTokenDataProvider->get();
     }
 
     /**
@@ -918,16 +889,16 @@ class Piksel
 
         $assetDataProvider = new AssetDataProvider($this->config);
         $data = $assetDataProvider->fetchAssetByVid(
-            $assetid,
-            false,
-            false,
-            false
+          $assetid,
+          false,
+          false,
+          false
         );
 
         // Abort if the asset cannot be found
         if (
-            array_key_exists('failure', $data) &&
-            $data['failure']['code'] === 303
+          array_key_exists('failure', $data) &&
+          $data['failure']['code'] === 303
         ) {
             return 'not found';
         }
@@ -999,8 +970,8 @@ class Piksel
 
         if ($video && $video->isDownloadable()) {
             return array(
-                'slug' => $video->getSlug(),
-                'url' => $video->getDownloadUrl(),
+              'slug' => $video->getSlug(),
+              'url' => $video->getDownloadUrl(),
             );
         }
 
@@ -1019,20 +990,20 @@ class Piksel
         // Get asset
         $assetDataProvider = new AssetDataProvider($this->config);
         $asset = $assetDataProvider->fetchAssetByVid(
-            $assetId,
-            false,
-            false,
-            false
+          $assetId,
+          false,
+          false,
+          false
         );
 
         // If asset not exists
         if (!isset($asset['assetid'])) {
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setAssociatedLinkAsSlug] Asset ID %d does not exists',
-                    $assetId
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setAssociatedLinkAsSlug] Asset ID %d does not exists',
+                $assetId
+              ),
             );
         }
 
@@ -1045,16 +1016,16 @@ class Piksel
         // Uncomment to disable SSL verification (but don't do that please...)
         // @see Guzzle 6 doc
         $guzzleClient = new GuzzleClient(
-            array(
-                'verify' => false,
-            )
+          array(
+            'verify' => false,
+          )
         );
         $client->setClient($guzzleClient);
 
         // Set header to build a no caching request
         $client->setHeader(
-            'Cache-Control',
-            'private, max-age=0, no-cache, no-store, must-revalidate'
+          'Cache-Control',
+          'private, max-age=0, no-cache, no-store, must-revalidate'
         );
         $client->setHeader('Pragma', 'no-cache');
         $client->setHeader('Expires', '0');
@@ -1064,37 +1035,37 @@ class Piksel
 
         // Prepare request data
         $url = sprintf(
-            '%s/services/index.php?&mode=json',
-            $this->config['baseURL']
+          '%s/services/index.php?&mode=json',
+          $this->config['baseURL']
         );
         $requestData = array(
-            'request' => array(
-                'authentication' => array(
-                    'app_token' => $this->config['token'],
-                    'client_token' => $this->config['clientToken'],
-                    'user_token' => $userToken,
-                ),
-                'header' => array(
-                    'header_version' => 1,
-                    'api_version' => '5',
-                    'no_cache' => true,
-                ),
-                'Ws_Asset_Associated_Link' => array(
-                    'assetId' => $assetId,
-                    'title' => $video->getTitle(),
-                    'url' => $video->getSlug(),
-                ),
+          'request' => array(
+            'authentication' => array(
+              'app_token' => $this->config['token'],
+              'client_token' => $this->config['clientToken'],
+              'user_token' => $userToken,
             ),
+            'header' => array(
+              'header_version' => 1,
+              'api_version' => '5',
+              'no_cache' => true,
+            ),
+            'Ws_Asset_Associated_Link' => array(
+              'assetId' => $assetId,
+              'title' => $video->getTitle(),
+              'url' => $video->getSlug(),
+            ),
+          ),
         );
 
         // Run POST request
         $client->request(
-            'POST',
-            $url,
-            array(),
-            array(),
-            array(),
-            json_encode($requestData)
+          'POST',
+          $url,
+          array(),
+          array(),
+          array(),
+          json_encode($requestData)
         );
 
         // Handle response
@@ -1111,26 +1082,49 @@ class Piksel
             $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
 
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setAssociatedLinkAsSlug] %s',
-                    $message
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setAssociatedLinkAsSlug] %s',
+                $message
+              ),
             );
         }
 
         // Success handling
         if (isset($content->response->success)) {
             return array(
-                'success' => true,
-                'message' => sprintf(
-                    '[Piksel::setAssociatedLinkAsSlug] a link (%s) has been associated successfully to asset %s',
-                    $video->getSlug(),
-                    $assetId
-                ),
+              'success' => true,
+              'message' => sprintf(
+                '[Piksel::setAssociatedLinkAsSlug] a link (%s) has been associated successfully to asset %s',
+                $video->getSlug(),
+                $assetId
+              ),
             );
         }
 
+    }
+
+    /**
+     * Get a temporary API user token
+     *
+     * The token is preserved and active for one session
+     *
+     * @param $config
+     * @return string
+     */
+    public function getApiTmpUserToken($config)
+    {
+        if (session_id()) {
+            @session_unset();
+            @session_destroy();
+            unset($_SESSION);
+            $_SESSION = array();
+
+        }
+        $userTokenDataProvider = new UserTokenDataProvider($config);
+        $userTokenDataProvider->clear();
+
+        return $userTokenDataProvider->get();
     }
 
     public function hasAssociatedLinkAsSlug($assetId)
@@ -1138,20 +1132,20 @@ class Piksel
         // Get asset
         $assetDataProvider = new AssetDataProvider($this->config);
         $asset = (object)$assetDataProvider->fetchAssetByVid(
-            $assetId,
-            false,
-            false,
-            false
+          $assetId,
+          false,
+          false,
+          false
         );
 
         // If asset not exists
         if (!isset($asset->assetid)) {
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setAssociatedLinkAsSlug] Asset ID %d does not exists',
-                    $assetId
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setAssociatedLinkAsSlug] Asset ID %d does not exists',
+                $assetId
+              ),
             );
         }
 
@@ -1172,36 +1166,36 @@ class Piksel
         // Get asset
         $assetDataProvider = new AssetDataProvider($this->config);
         $asset = (object)$assetDataProvider->fetchAssetByVid(
-            $assetId,
-            false,
-            false,
-            false
+          $assetId,
+          false,
+          false,
+          false
         );
 
         // If asset not exists
         if (!isset($asset->assetid)) {
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setToDefaultProject] Asset ID %d does not exists',
-                    $assetId
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setToDefaultProject] Asset ID %d does not exists',
+                $assetId
+              ),
             );
         }
 
         // Already placed handler
         if (
-            $checkIfIn &&
-            isset($asset->metadatas['in_default_project']) &&
-            $asset->metadatas['in_default_project'] != 'false'
+          $checkIfIn &&
+          isset($asset->metadatas['in_default_project']) &&
+          $asset->metadatas['in_default_project'] != 'false'
         ) {
             return array(
-                'success' => true,
-                'message' => sprintf(
-                    '[Piksel::setToDefaultProject] asset %s was already placed in default project (%s)',
-                    $assetId,
-                    $this->config['searchUUID']
-                ),
+              'success' => true,
+              'message' => sprintf(
+                '[Piksel::setToDefaultProject] asset %s was already placed in default project (%s)',
+                $assetId,
+                $this->config['searchUUID']
+              ),
             );
         }
 
@@ -1214,16 +1208,16 @@ class Piksel
 
         // Uncomment to disable SSL verification if needed
         $guzzleClient = new GuzzleClient(
-            array(
-                'verify' => false,
-            )
+          array(
+            'verify' => false,
+          )
         );
         $client->setClient($guzzleClient);
 
         // Set header to build a no caching request
         $client->setHeader(
-            'Cache-Control',
-            'private, max-age=0, no-cache, no-store, must-revalidate'
+          'Cache-Control',
+          'private, max-age=0, no-cache, no-store, must-revalidate'
         );
         $client->setHeader('Pragma', 'no-cache');
         $client->setHeader('Expires', '0');
@@ -1233,36 +1227,36 @@ class Piksel
 
         // Prepare request data
         $url = sprintf(
-            '%s/services/index.php?&mode=json',
-            $this->config['baseURL']
+          '%s/services/index.php?&mode=json',
+          $this->config['baseURL']
         );
         $requestData = array(
-            'request' => array(
-                'authentication' => array(
-                    'app_token' => $this->config['token'],
-                    'client_token' => $this->config['clientToken'],
-                    'user_token' => $userToken,
-                ),
-                'header' => array(
-                    'header_version' => 1,
-                    'api_version' => '5',
-                    'no_cache' => true,
-                ),
-                'ws_program' => array(
-                    'assetId' => $assetId,
-                    'projectUUID' => $this->config['searchUUID'],
-                ),
+          'request' => array(
+            'authentication' => array(
+              'app_token' => $this->config['token'],
+              'client_token' => $this->config['clientToken'],
+              'user_token' => $userToken,
             ),
+            'header' => array(
+              'header_version' => 1,
+              'api_version' => '5',
+              'no_cache' => true,
+            ),
+            'ws_program' => array(
+              'assetId' => $assetId,
+              'projectUUID' => $this->config['searchUUID'],
+            ),
+          ),
         );
 
         // Run POST request
         $client->request(
-            'POST',
-            $url,
-            array(),
-            array(),
-            array(),
-            json_encode($requestData)
+          'POST',
+          $url,
+          array(),
+          array(),
+          array(),
+          json_encode($requestData)
         );
 
         // Handle response
@@ -1274,11 +1268,11 @@ class Piksel
             $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
 
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setToDefaultProject] %s',
-                    $message
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setToDefaultProject] %s',
+                $message
+              ),
             );
         }
 
@@ -1287,30 +1281,157 @@ class Piksel
 
             if ($checkIfIn && isset($asset->metadatas['in_default_project'])) {
                 $this->setAssetProperties(
-                    $assetId,
-                    array(
-                        'request' => array(
-                            'ws_asset' => array(
-                                'metadatas' => array(
-                                    'in_default_project' => true,
-                                ),
-                            ),
+                  $assetId,
+                  array(
+                    'request' => array(
+                      'ws_asset' => array(
+                        'metadatas' => array(
+                          'in_default_project' => true,
                         ),
-                    )
+                      ),
+                    ),
+                  )
                 );
             }
 
             return array(
-                'success' => true,
-                'message' => sprintf(
-                    '[Piksel::setToDefaultProject] asset %s has been placed in default project (%s) successfully',
-                    $assetId,
-                    $this->config['searchUUID']
-                ),
+              'success' => true,
+              'message' => sprintf(
+                '[Piksel::setToDefaultProject] asset %s has been placed in default project (%s) successfully',
+                $assetId,
+                $this->config['searchUUID']
+              ),
             );
         }
 
 
+    }
+
+    /**
+     * Set asset properties
+     *
+     * @param $assetId
+     * @param array $data
+     * @return array
+     */
+    public function setAssetProperties($assetId, array $data = [])
+    {
+        // Get asset
+        $assetDataProvider = new AssetDataProvider($this->config);
+        $asset = (object)$assetDataProvider->fetchAssetByVid(
+          $assetId,
+          false,
+          false,
+          false
+        );
+
+        // If asset not exists
+        if (!isset($asset->assetid)) {
+            return array(
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::setMetadatas] Asset ID %d does not exists',
+                $assetId
+              ),
+            );
+        } elseif (count($data)) {
+
+            // Use a Video object for convenience
+//            $video = new Video($asset);
+
+            // Build request
+            $client = new Client();
+
+            // Uncomment to disable SSL verification if needed
+            $guzzleClient = new GuzzleClient(
+              array(
+                'verify' => false,
+              )
+            );
+            $client->setClient($guzzleClient);
+
+            // Set header to build a no caching request
+            $client->setHeader(
+              'Cache-Control',
+              'private, max-age=0, no-cache, no-store, must-revalidate'
+            );
+            $client->setHeader('Pragma', 'no-cache');
+            $client->setHeader('Expires', '0');
+
+            // Get user token
+            $userToken = $this->getApiTmpUserToken($this->config);
+
+            // Prepare request data
+            $url = sprintf(
+              '%s/ws/ws_asset/mode/json/apiv/5.0?method=put&',
+              str_replace('api-', '', $this->config['baseURL'])
+            );
+            $requestData = array(
+              'request' => array(
+                'authentication' => array(
+                  'app_token' => $this->config['token'],
+                  'client_token' => $this->config['clientToken'],
+                  'user_token' => $userToken,
+                ),
+                'header' => array(
+                  'header_version' => 1,
+                  'api_version' => '5',
+                  'no_cache' => true,
+                ),
+                'ws_asset' => array(
+                  'assetid' => (int)$assetId,
+                ),
+              ),
+            );
+
+            $requestData = array_merge_recursive($data, $requestData);
+
+            // Run request
+            $client->request(
+              'PUT',
+              $url,
+              array(),
+              array(),
+              array(),
+              json_encode($requestData)
+            );
+
+            // Handle response
+            $response = $client->getResponse();
+            $content = json_decode($response->getContent());
+
+            // Failure handling
+            if (isset($content->response->failure)) {
+                $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
+
+                return array(
+                  'failure' => true,
+                  'message' => sprintf(
+                    '[Piksel::setAssetProperties] %s',
+                    $message
+                  ),
+                );
+            }
+
+            // Success handling
+            if (isset($content->response->success)) {
+                return array(
+                  'success' => true,
+                  'message' => sprintf(
+                    '[Piksel::setAssetProperties] asset %s has modified successfully',
+                    $assetId
+                  ),
+                );
+            }
+        } else {
+            return array(
+              'success' => true,
+              'message' => sprintf(
+                '[Piksel::setAssetProperties] Asset ID %d remain not modified',
+                $assetId
+              ),
+            );
+        }
     }
 
     /**
@@ -1326,13 +1447,13 @@ class Piksel
 
         // Get asset programUUID in default project
         $associatedData = $assetDataProvider->fetchAssociationsByAssetid(
-            $assetId
+          $assetId
         );
 
         $programUUID = null;
         if (
-            isset($associatedData['associatedPrograms']) &&
-            count($associatedData['associatedPrograms'])
+          isset($associatedData['associatedPrograms']) &&
+          count($associatedData['associatedPrograms'])
         ) {
             foreach ($associatedData['associatedPrograms'] as $programReference) {
                 if ($programReference['project_title'] === $this->config['clientName']) {
@@ -1349,16 +1470,16 @@ class Piksel
 
             // Uncomment to disable SSL verification if needed
             $guzzleClient = new GuzzleClient(
-                array(
-                    'verify' => false,
-                )
+              array(
+                'verify' => false,
+              )
             );
             $client->setClient($guzzleClient);
 
             // Set header to build a no caching request
             $client->setHeader(
-                'Cache-Control',
-                'private, max-age=0, no-cache, no-store, must-revalidate'
+              'Cache-Control',
+              'private, max-age=0, no-cache, no-store, must-revalidate'
             );
             $client->setHeader('Pragma', 'no-cache');
             $client->setHeader('Expires', '0');
@@ -1368,35 +1489,35 @@ class Piksel
 
             // Prepare request data
             $url = sprintf(
-                '%s/ws/ws_program/mode/json/apiv/5.0?method=delete&',
-                str_replace('api-', '', $this->config['baseURL'])
+              '%s/ws/ws_program/mode/json/apiv/5.0?method=delete&',
+              str_replace('api-', '', $this->config['baseURL'])
             );
             $requestData = array(
-                'request' => array(
-                    'authentication' => array(
-                        'app_token' => $this->config['token'],
-                        'client_token' => $this->config['clientToken'],
-                        'user_token' => $userToken,
-                    ),
-                    'header' => array(
-                        'header_version' => 1,
-                        'api_version' => '5',
-                        'no_cache' => true,
-                    ),
-                    'ws_program' => array(
-                        'programUuid' => $programUUID,
-                    ),
+              'request' => array(
+                'authentication' => array(
+                  'app_token' => $this->config['token'],
+                  'client_token' => $this->config['clientToken'],
+                  'user_token' => $userToken,
                 ),
+                'header' => array(
+                  'header_version' => 1,
+                  'api_version' => '5',
+                  'no_cache' => true,
+                ),
+                'ws_program' => array(
+                  'programUuid' => $programUUID,
+                ),
+              ),
             );
 
             // Run DELETE request
             $client->request(
-                'DELETE',
-                $url,
-                array(),
-                array(),
-                array(),
-                json_encode($requestData)
+              'DELETE',
+              $url,
+              array(),
+              array(),
+              array(),
+              json_encode($requestData)
             );
 
             // Handle response
@@ -1408,30 +1529,29 @@ class Piksel
                 $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
 
                 return array(
-                    'failure' => true,
-                    'message' => sprintf(
-                        '[Piksel::deleteProgramIntoDefaultProject] %s',
-                        $message
-                    ),
+                  'failure' => true,
+                  'message' => sprintf(
+                    '[Piksel::deleteProgramIntoDefaultProject] %s',
+                    $message
+                  ),
                 );
             }
 
             // Success handling
             if (isset($content->response->success)) {
                 return array(
-                    'success' => true,
-                    'message' => sprintf(
-                        '[Piksel::deleteProgramIntoDefaultProject] program %s has been deleted from the default project (%s) successfully',
-                        $programUUID,
-                        $this->config['searchUUID']
-                    ),
+                  'success' => true,
+                  'message' => sprintf(
+                    '[Piksel::deleteProgramIntoDefaultProject] program %s has been deleted from the default project (%s) successfully',
+                    $programUUID,
+                    $this->config['searchUUID']
+                  ),
                 );
             }
 
         }
 
     }
-
 
     /**
      * Unpublish asset
@@ -1445,20 +1565,20 @@ class Piksel
         // Get asset
         $assetDataProvider = new AssetDataProvider($this->config);
         $asset = (object)$assetDataProvider->fetchAssetByVid(
-            $assetId,
-            false,
-            false,
-            false
+          $assetId,
+          false,
+          false,
+          false
         );
 
         // If asset not exists
         if (!isset($asset->assetid)) {
             return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::unpublish] Asset ID %d does not exists',
-                    $assetId
-                ),
+              'failure' => true,
+              'message' => sprintf(
+                '[Piksel::unpublish] Asset ID %d does not exists',
+                $assetId
+              ),
             );
         } elseif ($asset->isPublished || count($requestExtras)) {
 
@@ -1470,16 +1590,16 @@ class Piksel
 
             // Uncomment to disable SSL verification if needed
             $guzzleClient = new GuzzleClient(
-                array(
-                    'verify' => false,
-                )
+              array(
+                'verify' => false,
+              )
             );
             $client->setClient($guzzleClient);
 
             // Set header to build a no caching request
             $client->setHeader(
-                'Cache-Control',
-                'private, max-age=0, no-cache, no-store, must-revalidate'
+              'Cache-Control',
+              'private, max-age=0, no-cache, no-store, must-revalidate'
             );
             $client->setHeader('Pragma', 'no-cache');
             $client->setHeader('Expires', '0');
@@ -1489,38 +1609,38 @@ class Piksel
 
             // Prepare request data
             $url = sprintf(
-                '%s/ws/ws_asset/mode/json/apiv/5.0?method=put&',
-                str_replace('api-', '', $this->config['baseURL'])
+              '%s/ws/ws_asset/mode/json/apiv/5.0?method=put&',
+              str_replace('api-', '', $this->config['baseURL'])
             );
             $requestData = array(
-                'request' => array(
-                    'authentication' => array(
-                        'app_token' => $this->config['token'],
-                        'client_token' => $this->config['clientToken'],
-                        'user_token' => $userToken,
-                    ),
-                    'header' => array(
-                        'header_version' => 1,
-                        'api_version' => '5',
-                        'no_cache' => true,
-                    ),
-                    'ws_asset' => array(
-                        'assetid' => (int)$assetId,
-                        'isPublished' => 0,
-                    ),
+              'request' => array(
+                'authentication' => array(
+                  'app_token' => $this->config['token'],
+                  'client_token' => $this->config['clientToken'],
+                  'user_token' => $userToken,
                 ),
+                'header' => array(
+                  'header_version' => 1,
+                  'api_version' => '5',
+                  'no_cache' => true,
+                ),
+                'ws_asset' => array(
+                  'assetid' => (int)$assetId,
+                  'isPublished' => 0,
+                ),
+              ),
             );
 
             $requestData = array_merge_recursive($requestExtras, $requestData);
 
             // Run request
             $client->request(
-                'PUT',
-                $url,
-                array(),
-                array(),
-                array(),
-                json_encode($requestData)
+              'PUT',
+              $url,
+              array(),
+              array(),
+              array(),
+              json_encode($requestData)
             );
 
             // Handle response
@@ -1532,158 +1652,31 @@ class Piksel
                 $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
 
                 return array(
-                    'failure' => true,
-                    'message' => sprintf(
-                        '[Piksel::unpublish] %s',
-                        $message
-                    ),
+                  'failure' => true,
+                  'message' => sprintf(
+                    '[Piksel::unpublish] %s',
+                    $message
+                  ),
                 );
             }
 
             // Success handling
             if (isset($content->response->success)) {
                 return array(
-                    'success' => true,
-                    'message' => sprintf(
-                        '[Piksel::unpublish] asset %s has unpublished successfully',
-                        $assetId
-                    ),
+                  'success' => true,
+                  'message' => sprintf(
+                    '[Piksel::unpublish] asset %s has unpublished successfully',
+                    $assetId
+                  ),
                 );
             }
         } else {
             return array(
-                'success' => true,
-                'message' => sprintf(
-                    '[Piksel::unpublish] Asset ID %d is already unpublished',
-                    $assetId
-                ),
-            );
-        }
-    }
-
-    /**
-     * Set asset properties
-     *
-     * @param $assetId
-     * @param array $data
-     * @return array
-     */
-    public function setAssetProperties($assetId, array $data = [])
-    {
-        // Get asset
-        $assetDataProvider = new AssetDataProvider($this->config);
-        $asset = (object)$assetDataProvider->fetchAssetByVid(
-            $assetId,
-            false,
-            false,
-            false
-        );
-
-        // If asset not exists
-        if (!isset($asset->assetid)) {
-            return array(
-                'failure' => true,
-                'message' => sprintf(
-                    '[Piksel::setMetadatas] Asset ID %d does not exists',
-                    $assetId
-                ),
-            );
-        } elseif (count($data)) {
-
-            // Use a Video object for convenience
-//            $video = new Video($asset);
-
-            // Build request
-            $client = new Client();
-
-            // Uncomment to disable SSL verification if needed
-            $guzzleClient = new GuzzleClient(
-                array(
-                    'verify' => false,
-                )
-            );
-            $client->setClient($guzzleClient);
-
-            // Set header to build a no caching request
-            $client->setHeader(
-                'Cache-Control',
-                'private, max-age=0, no-cache, no-store, must-revalidate'
-            );
-            $client->setHeader('Pragma', 'no-cache');
-            $client->setHeader('Expires', '0');
-
-            // Get user token
-            $userToken = $this->getApiTmpUserToken($this->config);
-
-            // Prepare request data
-            $url = sprintf(
-                '%s/ws/ws_asset/mode/json/apiv/5.0?method=put&',
-                str_replace('api-', '', $this->config['baseURL'])
-            );
-            $requestData = array(
-                'request' => array(
-                    'authentication' => array(
-                        'app_token' => $this->config['token'],
-                        'client_token' => $this->config['clientToken'],
-                        'user_token' => $userToken,
-                    ),
-                    'header' => array(
-                        'header_version' => 1,
-                        'api_version' => '5',
-                        'no_cache' => true,
-                    ),
-                    'ws_asset' => array(
-                        'assetid' => (int)$assetId,
-                    ),
-                ),
-            );
-
-            $requestData = array_merge_recursive($data, $requestData);
-
-            // Run request
-            $client->request(
-                'PUT',
-                $url,
-                array(),
-                array(),
-                array(),
-                json_encode($requestData)
-            );
-
-            // Handle response
-            $response = $client->getResponse();
-            $content = json_decode($response->getContent());
-
-            // Failure handling
-            if (isset($content->response->failure)) {
-                $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
-
-                return array(
-                    'failure' => true,
-                    'message' => sprintf(
-                        '[Piksel::setAssetProperties] %s',
-                        $message
-                    ),
-                );
-            }
-
-            // Success handling
-            if (isset($content->response->success)) {
-                return array(
-                    'success' => true,
-                    'message' => sprintf(
-                        '[Piksel::setAssetProperties] asset %s has modified successfully',
-                        $assetId
-                    ),
-                );
-            }
-        } else {
-            return array(
-                'success' => true,
-                'message' => sprintf(
-                    '[Piksel::setAssetProperties] Asset ID %d remain not modified',
-                    $assetId
-                ),
+              'success' => true,
+              'message' => sprintf(
+                '[Piksel::unpublish] Asset ID %d is already unpublished',
+                $assetId
+              ),
             );
         }
     }
@@ -1701,13 +1694,13 @@ class Piksel
 
         // Get asset programUUID in default project
         $associatedData = $assetDataProvider->fetchAssociationsByAssetid(
-            $assetId
+          $assetId
         );
 
         $programUUID = null;
         if (
-            isset($associatedData['associatedPrograms']) &&
-            count($associatedData['associatedPrograms'])
+          isset($associatedData['associatedPrograms']) &&
+          count($associatedData['associatedPrograms'])
         ) {
             foreach ($associatedData['associatedPrograms'] as $programReference) {
                 if ($programReference['project_title'] === $this->config['clientName']) {
@@ -1724,16 +1717,16 @@ class Piksel
 
             // Uncomment to disable SSL verification if needed
             $guzzleClient = new GuzzleClient(
-                array(
-                    'verify' => false,
-                )
+              array(
+                'verify' => false,
+              )
             );
             $client->setClient($guzzleClient);
 
             // Set header to build a no caching request
             $client->setHeader(
-                'Cache-Control',
-                'private, max-age=0, no-cache, no-store, must-revalidate'
+              'Cache-Control',
+              'private, max-age=0, no-cache, no-store, must-revalidate'
             );
             $client->setHeader('Pragma', 'no-cache');
             $client->setHeader('Expires', '0');
@@ -1743,36 +1736,36 @@ class Piksel
 
             // Prepare request data
             $url = sprintf(
-                '%s/ws/ws_program/mode/json/apiv/5.0?method=put&',
-                str_replace('api-', '', $this->config['baseURL'])
+              '%s/ws/ws_program/mode/json/apiv/5.0?method=put&',
+              str_replace('api-', '', $this->config['baseURL'])
             );
             $requestData = array(
-                'request' => array(
-                    'authentication' => array(
-                        'app_token' => $this->config['token'],
-                        'client_token' => $this->config['clientToken'],
-                        'user_token' => $userToken,
-                    ),
-                    'header' => array(
-                        'header_version' => 1,
-                        'api_version' => '5',
-                        'no_cache' => true,
-                    ),
-                    'ws_program' => array(
-                        'programUUID' => $programUUID,
-                        'isPublished' => 1,
-                    ),
+              'request' => array(
+                'authentication' => array(
+                  'app_token' => $this->config['token'],
+                  'client_token' => $this->config['clientToken'],
+                  'user_token' => $userToken,
                 ),
+                'header' => array(
+                  'header_version' => 1,
+                  'api_version' => '5',
+                  'no_cache' => true,
+                ),
+                'ws_program' => array(
+                  'programUUID' => $programUUID,
+                  'isPublished' => 1,
+                ),
+              ),
             );
 
             // Run POST request
             $client->request(
-                'PUT',
-                $url,
-                array(),
-                array(),
-                array(),
-                json_encode($requestData)
+              'PUT',
+              $url,
+              array(),
+              array(),
+              array(),
+              json_encode($requestData)
             );
 
             // Handle response
@@ -1784,23 +1777,23 @@ class Piksel
                 $message = isset($response->response->failure) ? $response->response->failure->reason : 'an error occured during execution';
 
                 return array(
-                    'failure' => true,
-                    'message' => sprintf(
-                        '[Piksel::publishProgramInDefaultProject] %s',
-                        $message
-                    ),
+                  'failure' => true,
+                  'message' => sprintf(
+                    '[Piksel::publishProgramInDefaultProject] %s',
+                    $message
+                  ),
                 );
             }
 
             // Success handling
             if (isset($content->response->success)) {
                 return array(
-                    'success' => true,
-                    'message' => sprintf(
-                        '[Piksel::publishProgramInDefaultProject] program %s has been published in default project (%s) successfully',
-                        $programUUID,
-                        $this->config['searchUUID']
-                    ),
+                  'success' => true,
+                  'message' => sprintf(
+                    '[Piksel::publishProgramInDefaultProject] program %s has been published in default project (%s) successfully',
+                    $programUUID,
+                    $this->config['searchUUID']
+                  ),
                 );
             }
 

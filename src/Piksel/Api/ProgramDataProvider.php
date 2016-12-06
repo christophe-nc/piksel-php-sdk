@@ -39,6 +39,46 @@ class ProgramDataProvider extends DataProviderBase
     }
 
     /**
+     * fetchByProjectUUID
+     *
+     * Retrieve videos as programs by a project UUID.
+     *
+     * @param string $uuid a project uuid
+     * @param int $start
+     * @param int $limit
+     * @param string $sortby Optional, possible values: sortnum, dateStart, dateEnd ; default: sortnum
+     * @param string $sortdir Optional, possible values: desc, asc ; default: desc
+     * @return array|mixed|null
+     */
+    public function fetchByProjectUUID($uuid, $start = 0, $limit = 20, $sortby = 'sortnum', $sortdir = 'desc')
+    {
+
+        // Build the query
+        $query = sprintf(
+          'p=%s&start=%d&end=%d&sortby=%s&sortdir=%s&include_viewcount=true&include_details=true',
+          $uuid,
+          $start,
+          ($start + $limit - 1),
+          $sortby,
+          $sortdir
+        );
+
+        // Return the response data
+        $count = 0;
+        $data = $this->doRequest($query, 'ws_program', $count);
+        $data = isset($data['programs']) ? $data['programs'] : $data;
+//        if ($count > 0) {
+//            // Populate programs results with missing asset properties
+//            foreach ($data as &$item) {
+//                $item += self::fetchAssetByVid($item['assetid']);
+//            }
+//        }
+        $data['totalCount'] = $count;
+
+        return $data;
+    }
+
+    /**
      * fetchProgramsByRefId
      *
      * Retrieve programs by category reference ID.
@@ -55,12 +95,12 @@ class ProgramDataProvider extends DataProviderBase
 
         // Build the query
         $query = sprintf(
-            'refid=%s&start=%d&end=%d&sortby=%s&sortdir=%s&include_viewcount=true&include_details=true',
-            $refId,
-            $start,
-            ($start + $limit - 1),
-            $sortby,
-            $sortdir
+          'refid=%s&start=%d&end=%d&sortby=%s&sortdir=%s&include_viewcount=true&include_details=true',
+          $refId,
+          $start,
+          ($start + $limit - 1),
+          $sortby,
+          $sortdir
         );
 
         // Return the response data
@@ -98,46 +138,6 @@ class ProgramDataProvider extends DataProviderBase
     }
 
     /**
-     * fetchByProjectUUID
-     *
-     * Retrieve videos as programs by a project UUID.
-     *
-     * @param string $uuid a project uuid
-     * @param int $start
-     * @param int $limit
-     * @param string $sortby Optional, possible values: sortnum, dateStart, dateEnd ; default: sortnum
-     * @param string $sortdir Optional, possible values: desc, asc ; default: desc
-     * @return array|mixed|null
-     */
-    public function fetchByProjectUUID($uuid, $start = 0, $limit = 20, $sortby = 'sortnum', $sortdir = 'desc')
-    {
-
-        // Build the query
-        $query = sprintf(
-            'p=%s&start=%d&end=%d&sortby=%s&sortdir=%s&include_viewcount=true&include_details=true',
-            $uuid,
-            $start,
-            ($start + $limit - 1),
-            $sortby,
-            $sortdir
-        );
-
-        // Return the response data
-        $count = 0;
-        $data = $this->doRequest($query, 'ws_program', $count);
-        $data = isset($data['programs']) ? $data['programs'] : $data;
-//        if ($count > 0) {
-//            // Populate programs results with missing asset properties
-//            foreach ($data as &$item) {
-//                $item += self::fetchAssetByVid($item['assetid']);
-//            }
-//        }
-        $data['totalCount'] = $count;
-
-        return $data;
-    }
-
-    /**
      * Filter assets or programs by a given property and its value
      *
      * A cleaning-asset helper
@@ -151,36 +151,37 @@ class ProgramDataProvider extends DataProviderBase
     {
 
 //        if (isset($data['programs'])) {
-            if (strpos($property, '.')) {
-                $property = explode('.', $property);
-            }
-            $data = array_filter(
-                $data,
-                function ($item) use ($property, $value) {
-                    if (!is_array($property) && isset($item[$property])) {
-                        if ($item[$property] == $value) {
-                            return false;
-                        }
-                    } elseif (
-                        isset($item[$property[0]])
+        if (strpos($property, '.')) {
+            $property = explode('.', $property);
+        }
+        $data = array_filter(
+          $data,
+          function ($item) use ($property, $value) {
+              if (!is_array($property) && isset($item[$property])) {
+                  if ($item[$property] == $value) {
+                      return false;
+                  }
+              } elseif (
+              isset($item[$property[0]])
 //                        && isset($item[$property[0]][array_pop($property)])
-                    ) {
+              ) {
 //                        foreach (array_shift($property) as $property2) {
 //                            if ($item[$property[0]][array_shift($property)] == $value) {
 //                                return false;
 //                            }
 //                        }
-                    }
+              }
 
-                    return true;
-                }
-            );
-            if (isset($data['currentCount']) && $data['currentCount'] > 0) {
-                $data['currentCount'] = count($data) - 1;
-            }
-            if (isset($data['totalCount']) && $data['totalCount'] > 0) {
-                $data['totalCount'] = count($data) - 1;
-            }
+              return true;
+          }
+        );
+        if (isset($data['currentCount']) && $data['currentCount'] > 0) {
+            $data['currentCount'] = count($data) - 1;
+        }
+        if (isset($data['totalCount']) && $data['totalCount'] > 0) {
+            $data['totalCount'] = count($data) - 1;
+        }
+
 //        }
 
         return $data;
