@@ -125,9 +125,10 @@ class Base
     {
         if (!$this->slug || $slug) {
             if (!$slug) {
-                $slug = str_replace('-', '--', $this->getTitle());
+                $slug = $this->getTitle();
             }
             $slugify = new Slugify();
+            $slugify->addRule('-', '--');
             $this->slug = $slugify->slugify($slug);
         }
 
