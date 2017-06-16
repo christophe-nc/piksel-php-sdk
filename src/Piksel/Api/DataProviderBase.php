@@ -89,11 +89,11 @@ abstract class DataProviderBase
                 array(
                   '/([A-Z])/',
                   '/[_\s]+/',
-                  '/[--\s]+/',
                   '/[-\s]+/',
+                  '/\*/',
                 ),
-                array('_$1', ' ', '-', ' '),
-                $text
+                array('_$1', ' ', ' ', '-'),
+                str_replace('--', '*', $text)
               )
             )
           )
