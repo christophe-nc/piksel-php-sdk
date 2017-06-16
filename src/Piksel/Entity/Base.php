@@ -127,9 +127,9 @@ class Base
             if (!$slug) {
                 $slug = $this->getTitle();
             }
+            $slug = str_replace('-', '666', $slug);
             $slugify = new Slugify();
-            $slugify->addRule('-', '--');
-            $this->slug = $slugify->slugify($slug);
+            $this->slug = str_replace('666', '--', $slugify->slugify($slug));
         }
 
         return $this->slug;
