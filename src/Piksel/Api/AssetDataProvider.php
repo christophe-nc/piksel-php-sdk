@@ -193,6 +193,7 @@ class AssetDataProvider extends DataProviderBase
                 // We update counts
                 $count += $sharedCount;
                 $data['totalCount'] = $count;
+                $data['currentCount'] = count($data['asset']);
             }
         }
 
