@@ -89,9 +89,10 @@ abstract class DataProviderBase
                 array(
                   '/([A-Z])/',
                   '/[_\s]+/',
+                  '/[--\s]+/',
                   '/[-\s]+/',
                 ),
-                array('_$1', ' ', ' '),
+                array('_$1', ' ', '-', ' '),
                 $text
               )
             )
