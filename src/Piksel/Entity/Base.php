@@ -125,7 +125,7 @@ class Base
     {
         if (!$this->slug || $slug) {
             if (!$slug) {
-                $slug = str_replace('-', '--', $this->getTitle();
+                $slug = str_replace('-', '--', $this->getTitle());
             }
             $slugify = new Slugify();
             $this->slug = $slugify->slugify($slug);
