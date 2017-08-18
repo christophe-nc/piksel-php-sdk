@@ -130,7 +130,7 @@ class AssetDataProvider extends DataProviderBase
         // Build the query
         $query = sprintf(
           'start=%d&end=%d&sortby=%s&sortdir=%s&isPublished=true&metadata=%s&metavalue=%s&include_shared=true&assetfiles=true',
-          $start,
+          ($start >0 ? $start-1 : $start),
           ($start + $limit - 1),
           $sortby,
           $sortdir,
@@ -188,7 +188,7 @@ class AssetDataProvider extends DataProviderBase
                 // We cut the collection to the limit to honor pagination process
                 // we don't use the $limit variable earlier since we cannot know
                 // the available number of results for each set.
-                $data['asset'] = array_slice($data['asset'], 0, $limit);
+                $data['asset'] = array_slice($data['asset'], 0, ($start > 0 ? $limit : $limit + 1));
 
                 // We update counts
                 $count += $sharedCount;
